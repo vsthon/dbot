@@ -61,7 +61,7 @@ client.once('ready', async () => {
             if (reactions[reaction.emoji.name][0] == "Group") {
                 const groupdata = await axios.get(`https://groups.roblox.com/v2/users/${userid}/groups/roles`)
                 if (!groupdata.data.errors && groupdata.data.data && groupdata.data.data.find(v => 
-                    v.group.id >= reactions[reaction.emoji.name][2] && v.role.rank == reactions[reaction.emoji.name][3])
+                    v.group.id == reactions[reaction.emoji.name][2] && v.role.rank >= reactions[reaction.emoji.name][3])
                 ) {
                     try {
                         const role2add = await guild.roles.fetch(reactions[reaction.emoji.name][1])
@@ -261,7 +261,7 @@ client.on('messageCreate', async msg => {
                 if (reactions[reaction.emoji.name][0] == "Group") {
                     const groupdata = await axios.get(`https://groups.roblox.com/v2/users/${userid}/groups/roles`)
                     if (groupdata.data.data && groupdata.data.data.find(v => 
-                        v.group.id >= reactions[reaction.emoji.name][2] && v.role.rank == reactions[reaction.emoji.name][3])
+                        v.group.id == reactions[reaction.emoji.name][2] && v.role.rank >= reactions[reaction.emoji.name][3])
                     ) {
                         try {
                             const role2add = await msg.guild.roles.fetch(reactions[reaction.emoji.name][1])
