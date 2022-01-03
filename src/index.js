@@ -4,6 +4,7 @@ const { token } = require('./config.json');
 const axios = require('axios')
 const fs = require('fs/promises')
 const { constants } = require('fs')
+const http = require('http');
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
@@ -11,7 +12,10 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 let inUse = false
 let reactions = {}
 let collector = null
-
+http.createServer((req, res) => {     
+        res.writeHead(200, {'Content-Type': 'text/plain'});     
+        res.send('it is running\n'); 
+    }).listen(5000); 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
 	console.log('Ready!');
