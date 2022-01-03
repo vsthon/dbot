@@ -4,7 +4,8 @@ const { token } = require('./config.json');
 const axios = require('axios')
 const fs = require('fs/promises')
 const { constants } = require('fs')
-const http = require('http');
+const express = require('express');
+const app     = express();
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
@@ -12,10 +13,16 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 let inUse = false
 let reactions = {}
 let collector = null
-http.createServer((req, res) => {     
-        res.writeHead(200, {'Content-Type': 'text/plain'});     
-        res.send('it is running\n'); 
-    }).listen(process.env.PORT || 5000); 
+
+app.set('port', (process.env.PORT || 5000));
+
+//For avoidong Heroku $PORT error
+app.get('/', function(request, response) {
+    let result = 'App is running'
+    response.send(result);
+}).listen(app.get('port'), function() {
+    console.log('App is running, server is listening on port ', app.get('port'));
+});
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
 	console.log('Ready!');
