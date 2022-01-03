@@ -149,14 +149,14 @@ client.on('messageCreate', async msg => {
         try { 
             let c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
             if (c.first().content == "Exit") { 
-                cleanup("Aborted") 
+                await cleanup("Aborted") 
                 return 
             }
 
             const msgId = c.first().content
-            reactions = {}
+            let freactions = {}
             while (true) { 
-                await sendMsg(`Enter emoji ID for reaction #${Object.keys(reactions).length}.`, `To stop, say "Exit". To finish, say "Finish".`) 
+                await sendMsg(`Enter emoji ID for reaction #${Object.keys(freactions).length}.`, `To stop, say "Exit". To finish, say "Finish".`) 
                 c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
                 let resp = c.first().content 
 
@@ -171,7 +171,7 @@ client.on('messageCreate', async msg => {
                 c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
 
                 if (c.first().content == "Gamepasses") {
-                    await sendMsg(`Enter gamepass ID for reaction #${Object.keys(reactions).length}.`, `To stop, say "Exit".`) 
+                    await sendMsg(`Enter gamepass ID for reaction #${Object.keys(freactions).length}.`, `To stop, say "Exit".`) 
                     c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
     
                     if (c.first().content == "Exit") { 
@@ -180,7 +180,7 @@ client.on('messageCreate', async msg => {
                     } 
                     const gid = c.first().content
                     
-                    await sendMsg(`Enter role ID for reaction #${Object.keys(reactions).length}.`, `To stop, say "Exit".`) 
+                    await sendMsg(`Enter role ID for reaction #${Object.keys(freactions).length}.`, `To stop, say "Exit".`) 
                     c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
     
                     if (c.first().content == "Exit") { 
@@ -188,9 +188,9 @@ client.on('messageCreate', async msg => {
                         return 
                     } 
                     
-                    reactions[resp] = ["Gamepass", String(c.first().content), gid] 
+                    freactions[resp] = ["Gamepass", String(c.first().content), gid] 
                 } else if (c.first().content == "Groups") {
-                    await sendMsg(`Enter group ID for reaction #${Object.keys(reactions).length}.`, `To stop, say "Exit".`) 
+                    await sendMsg(`Enter group ID for reaction #${Object.keys(freactions).length}.`, `To stop, say "Exit".`) 
                     c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
     
                     if (c.first().content == "Exit") { 
@@ -199,7 +199,7 @@ client.on('messageCreate', async msg => {
                     }
                     let id = c.first().content
 
-                    await sendMsg(`Enter group role rank for reaction #${Object.keys(reactions).length}.`, `To stop, say "Exit".`) 
+                    await sendMsg(`Enter group role rank for reaction #${Object.keys(freactions).length}.`, `To stop, say "Exit".`) 
                     c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
     
                     if (c.first().content == "Exit") { 
@@ -208,23 +208,23 @@ client.on('messageCreate', async msg => {
                     } 
                     const rr = c.first().content
 
-                    await sendMsg(`Enter role ID for reaction #${Object.keys(reactions).length}.`, `To stop, say "Exit".`) 
+                    await sendMsg(`Enter role ID for reaction #${Object.keys(freactions).length}.`, `To stop, say "Exit".`) 
                     c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
     
                     if (c.first().content == "Exit") { 
                         cleanup("Aborted") 
                         return 
                     } 
-                    reactions[resp] = ["Group", String(c.first().content), id, Number(rr)] 
+                    freactions[resp] = ["Group", String(c.first().content), id, Number(rr)] 
                 } else if (c.first().content == "None") {                    
-                    await sendMsg(`Enter role ID for reaction #${Object.keys(reactions).length}.`, `To stop, say "Exit".`) 
+                    await sendMsg(`Enter role ID for reaction #${Object.keys(freactions).length}.`, `To stop, say "Exit".`) 
                     c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
 
                     if (c.first().content == "Exit") { 
                         cleanup("Aborted") 
                         return 
                     } 
-                    reactions[resp] = ["None", String(c.first().content)]
+                    freactions[resp] = ["None", String(c.first().content)]
                 } else if (c.first().content == "Exit") {
                     cleanup("Aborted") 
                     return 
@@ -235,6 +235,7 @@ client.on('messageCreate', async msg => {
             } 
             await cleanup("Success") 
             const newmsg = await msg.channel.messages.fetch(msgId)
+            reactions = freactions
 
             const rfilter = (_, user) => !user.bot
             collector = newmsg.createReactionCollector({filter: rfilter, dispose: true}); 
