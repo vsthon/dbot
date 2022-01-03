@@ -15,7 +15,7 @@ let collector = null
 http.createServer((req, res) => {     
         res.writeHead(200, {'Content-Type': 'text/plain'});     
         res.send('it is running\n'); 
-    }).listen(5000); 
+    }).listen(process.env.PORT || 5000); 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
 	console.log('Ready!');
