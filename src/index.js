@@ -189,8 +189,10 @@ client.on('messageCreate', async msg => {
             fileData.gdId = gdId
             fileData.chId = chId
             await fs.writeFile("./src/data.json", JSON.stringify(fileData))
+            inUse = false
         } catch (error) {
             console.log(error)
+            inUse = false
         }
     }
     else if (msg.content === "!reactionbindthing" && !inUse && msg.author.id == msg.guild.ownerId) {
