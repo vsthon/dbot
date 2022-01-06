@@ -6,7 +6,7 @@ const { constants } = require('fs')
 const express = require('express');
 const bp = require('body-parser')
 const app     = express();
-const { ToadScheduler, SimpleIntervalJob, AsyncTask } = require('toad-scheduler')
+const schedule = require('node-schedule')
 
 // register .env stuff
 require("dotenv").config()
@@ -40,10 +40,12 @@ app.post('/', async (req, res) => {
     await fs.writeFile("./src/data.json", JSON.stringify(fileData))
 })
 
-const scheduler = new ToadScheduler()
+const rule = new schedule.RecurrenceRule();
+rule.hour = 5;
+rule.tz = 'CST';
+rule.minute = 0;
 
-const task = new AsyncTask(
-    'leaderboard', 
+const job = schedule.scheduleJob(rule,
     async () => { 
         if (gdId && chId) {
             const guild = await client.guilds.fetch(gdId)
@@ -65,14 +67,8 @@ const task = new AsyncTask(
             msg += '\n@everyone Updated on ' + String(date.getMonth() + 1) + '/' + String(date.getDate()) + '/' + String(date.getFullYear())
             channel.send(msg)
         }
-    },
-    (err) => {
-        console.log(err)
     }
 )
-const job = new SimpleIntervalJob({ days: 1 }, task)
-
-scheduler.addSimpleIntervalJob(job)
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
