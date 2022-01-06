@@ -90,7 +90,7 @@ client.once('ready', async () => {
         if (objectdata.leaderboarddata) {
             leaderboarddata = objectdata.leaderboarddata
         }
-        if (!objectdata.guild || !objectdata.channel || !objectdata.newmsg) {
+        if (!objectdata.guildId || !objectdata.channelId || !objectdata.msgId) {
             return
         }
         
