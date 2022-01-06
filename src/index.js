@@ -41,7 +41,7 @@ app.post('/', async (req, res) => {
 })
 
 const rule = new schedule.RecurrenceRule();
-rule.hour = 5;
+rule.hour = 16;
 rule.tz = 'CST';
 rule.minute = 0;
 
