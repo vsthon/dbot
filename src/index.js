@@ -1,11 +1,15 @@
 // Require the necessary discord.js classes
-const { Client, Intents, MessageEmbed, MessageFlags } = require('discord.js');
-const { token } = require('./config.json');
+const { Client, Intents, MessageEmbed, MessageAttachment } = require('discord.js');
 const axios = require('axios')
 const fs = require('fs/promises')
 const { constants } = require('fs')
 const express = require('express');
+const bp = require('body-parser')
 const app     = express();
+const { ToadScheduler, SimpleIntervalJob, AsyncTask } = require('toad-scheduler')
+
+// register .env stuff
+require("dotenv").config()
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS] });
@@ -13,28 +17,87 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 let inUse = false
 let reactions = {}
 let collector = null
+let leaderboarddata = []
+let gdId = undefined
+let chId = undefined
+let fileData = {}
 
 app.set('port', (process.env.PORT || 5000));
 
+app.use(bp.urlencoded({ extended: false }))
+app.use(bp.json())
+
 //For avoidong Heroku $PORT error
-app.get('/', function(request, response) {
+app.get('/', (req, res) => {
     let result = 'App is running'
-    response.send(result);
+    res.send(result);
 }).listen(app.get('port'), function() {
     console.log('App is running, server is listening on port ', app.get('port'));
 });
+app.post('/', async (req, res) => {
+    leaderboarddata = req.body
+    fileData.leaderboarddata = leaderboarddata
+    await fs.writeFile("./src/data.json", JSON.stringify(fileData))
+})
+
+const scheduler = new ToadScheduler()
+
+const task = new AsyncTask(
+    'leaderboard', 
+    async () => { 
+        if (gdId && chId) {
+            const guild = await client.guilds.fetch(gdId)
+            const channel = await guild.channels.fetch(chId)
+            const img = new MessageAttachment("./images/img.jfif", "img.jpg")
+            await channel.send({files: [img]})
+            let n = 1
+            let msg = ">>> **MOST WANTED CREWS IN LAS PALMAS**\n"
+            for (let n = 1; n <= leaderboarddata.length; n++) {
+                const v = leaderboarddata[n - 1]
+                if (typeof v == "string") {
+                    msg += String(n) + ". " + v + "\n"
+                }
+            }
+            const date = new Date()
+            msg += '\nUpdated on ' + String(date.getMonth() + 1) + '/' + String(date.getDate()) + '/' + String(date.getFullYear())
+            channel.send(msg)
+        }
+    },
+    (err) => {
+        console.log(err)
+    }
+)
+const job = new SimpleIntervalJob({ seconds: 5, }, task)
+
+scheduler.addSimpleIntervalJob(job)
+
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
 	console.log('Ready!');
+    let file = undefined
     try {
         await fs.access("./src/data.json", constants.F_OK | constants.R_OK)
-        const file = await fs.open("./src/data.json")
+        file = await fs.open("./src/data.json")
         const data = await file.readFile("utf-8")
         const objectdata = JSON.parse(data)
+        reactions = objectdata.reactions
+        fileData = objectdata
+        if (objectdata.gdId) {
+            gdId = objectdata.gdId
+        }
+        if (objectdata.chId) {
+            chId = objectdata.chId
+        }
+        if (objectdata.leaderboarddata) {
+            leaderboarddata = objectdata.leaderboarddata
+        }
+        if (!objectdata.guild || !objectdata.channel || !objectdata.newmsg) {
+            return
+        }
+        
         const guild = await client.guilds.fetch(objectdata.guildId)
         const channel = await guild.channels.fetch(objectdata.channelId)
         const newmsg = await channel.messages.fetch(objectdata.msgId)
-        reactions = objectdata.reactions
 
         const rfilter = (_, user) => !user.bot
         collector = newmsg.createReactionCollector({filter: rfilter, dispose: true}); 
@@ -106,13 +169,31 @@ client.once('ready', async () => {
         });
         file.close()
     } catch (error) {
+        if (file) {
+            file.close()
+        }
         console.log(error)
         return
     }
 });
 
 client.on('messageCreate', async msg => {
-    if (msg.content === "!reactionbindthing" && !inUse && msg.author.id == msg.guild.ownerId) {
+    if (msg.content === "!bindLeaderboardChannel" && !inUse && msg.author.id == msg.guild.ownerId) {
+        inUse = true
+        await msg.channel.send("Enter channel ID")
+        try {
+            const filter = () => true
+            let c = await msg.channel.awaitMessages({filter, max: 1, time: 5000000, errors: ['time']}) 
+            gdId = String(msg.guild.id)
+            chId = c.first().content
+            fileData.gdId = gdId
+            fileData.chId = chId
+            await fs.writeFile("./src/data.json", JSON.stringify(fileData))
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    else if (msg.content === "!reactionbindthing" && !inUse && msg.author.id == msg.guild.ownerId) {
         inUse = true
         if (collector != null) {
             collector.stop()
@@ -312,12 +393,11 @@ client.on('messageCreate', async msg => {
                     await newmsg.react(k)
                 }
             })
-            await fs.writeFile("./src/data.json", JSON.stringify({
-                guildId: msg.guild.id,
-                channelId: msg.channel.id,
-                msgId: msgId,
-                reactions: reactions
-            }))
+            fileData.guildId = msg.guild.id
+            fileData.channelId = msg.channel.id
+            fileData.msgId = msgId
+            fileData.reactions = reactions
+            await fs.writeFile("./src/data.json", JSON.stringify(fileData))
         } 
         catch (e) { 
             console.log(e)
@@ -327,4 +407,4 @@ client.on('messageCreate', async msg => {
 })
 
 // Login to Discord with your client's token
-client.login(token);
+client.login(process.env.TOKEN);
