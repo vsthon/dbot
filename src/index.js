@@ -52,14 +52,17 @@ const task = new AsyncTask(
             await channel.send({files: [img]})
             let n = 1
             let msg = ">>> **MOST WANTED CREWS IN LAS PALMAS**\n"
-            for (let n = 1; n <= leaderboarddata.length; n++) {
-                const v = leaderboarddata[n - 1]
-                if (typeof v == "string") {
+            for (let n = 0; n < 5; n++) {
+                const v = leaderboarddata[n]
+                if (v == undefined) {
+                    msg += String(n) + ". n/a\n"
+                }
+                else if (typeof v == "string") {
                     msg += String(n) + ". " + v + "\n"
                 }
             }
             const date = new Date()
-            msg += '\nUpdated on ' + String(date.getMonth() + 1) + '/' + String(date.getDate()) + '/' + String(date.getFullYear())
+            msg += '\n@everyone Updated on ' + String(date.getMonth() + 1) + '/' + String(date.getDate()) + '/' + String(date.getFullYear())
             channel.send(msg)
         }
     },
