@@ -41,7 +41,7 @@ app.post('/', async (req, res) => {
 })
 
 const rule = new schedule.RecurrenceRule();
-rule.hour = 16;
+rule.hour = 17;
 rule.tz = 'CST';
 rule.minute = 0;
 
@@ -57,10 +57,10 @@ const job = schedule.scheduleJob(rule,
             for (let n = 0; n < 5; n++) {
                 const v = leaderboarddata[n]
                 if (v == undefined) {
-                    msg += String(n) + ". n/a\n"
+                    msg += String(n + 1) + ". n/a\n"
                 }
                 else if (typeof v == "string") {
-                    msg += String(n) + ". " + v + "\n"
+                    msg += String(n + 1) + ". " + v + "\n"
                 }
             }
             const date = new Date()
